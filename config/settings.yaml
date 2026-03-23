@@ -1,0 +1,68 @@
+api:
+  token: "eUk4Sm4yV1k5ODZULUhfQTBZY2lhcFBSTk5kcWJUWFNLWENpd1BmRUdLUT0"       # paste your marketdata.app token
+  base_url: "https://api.marketdata.app/v1"
+  request_delay: 0.35                # seconds between requests (be polite)
+  retry_attempts: 3                  # retries on rate-limit / server error
+  retry_backoff: 60                  # seconds to wait on 429
+
+tickers:
+  - symbol: AAPL
+    sector: Technology
+    notes: "Large-cap tech, indirect tariff exposure via supply chain"
+  - symbol: NVDA
+    sector: Semiconductors
+    notes: "Direct chip export restriction exposure, AI demand driver"
+  - symbol: AMZN
+    sector: Consumer Discretionary
+    notes: "E-commerce + AWS, supply chain + consumer spending exposure"
+  - symbol: PG
+    sector: Consumer Staples
+    notes: "Defensive FMCG, low beta, expected to be least affected"
+  - symbol: CAT
+    sector: Industrials
+    notes: "Heavy machinery, large China revenue, direct tariff exposure"
+
+collection:
+  phases:
+    - id: 1
+      name: "pre_tariff_baseline"
+      start: "2025-01-06"            # first trading day of 2025
+      end: "2025-03-17"              # two weeks before Liberation Day
+      frequency: "weekly"            # one snapshot per week
+      strike_limit: 20
+
+    - id: 2
+      name: "tariff_event_window"
+      start: "2025-03-18"
+      end: "2025-05-09"              # ~4 weeks after 90-day pause announced
+      frequency: "daily"             # every trading day
+      strike_limit: 30               # wider strike coverage to capture skew
+
+    - id: 3
+      name: "recovery"
+      start: "2025-05-12"
+      end: "2026-01-16"
+      frequency: "weekly"
+      strike_limit: 20
+
+  # Scraper picks the nearest available expiry to each target
+  target_dtes: [7, 30, 90, 180]
+
+  # ── Key event dates (used in EDA)
+  key_events:
+    - date: "2025-04-02"
+      label: "Liberation Day"
+      description: "Trump announces sweeping tariffs on ~60 countries"
+    - date: "2025-04-09"
+      label: "Escalation + Pause"
+      description: "Tariffs raised for 57 partners; 90-day pause announced same day"
+    - date: "2025-05-12"
+      label: "US-China Truce"
+      description: "90-day tariff reduction agreement between US and China"
+
+paths:
+  raw_options:  "data/raw/options"
+  raw_prices:   "data/raw/prices"
+  clean:        "data/clean"
+  combined:     "data/combined"
+  logs:         "logs"
