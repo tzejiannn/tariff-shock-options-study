@@ -30,7 +30,7 @@ _HOLIDAYS = _HOLIDAYS_2025 | _HOLIDAYS_2026
 def is_trading_day(d: date) -> bool:
     return d.weekday() < 5 and d not in _HOLIDAYS
 
-
+#Phase 2
 def trading_days_between(start: str, end: str) -> list[str]:
     s = date.fromisoformat(start)
     e = date.fromisoformat(end)
@@ -42,7 +42,7 @@ def trading_days_between(start: str, end: str) -> list[str]:
         current += timedelta(days=1)
     return result
 
-
+#Phase 1
 def weekly_trading_days(start: str, end: str) -> list[str]:
     all_days = trading_days_between(start, end)
     if not all_days:
@@ -72,7 +72,7 @@ def get_collection_dates(phase: dict) -> list[str]:
 
 if __name__ == "__main__":
     # Quick sanity check
-    from config.loader import cfg
+    from config.load_settings import cfg
     for phase in cfg["collection"]["phases"]:
         dates = get_collection_dates(phase)
         print(f"Phase {phase['id']} ({phase['name']}): {len(dates)} collection days")

@@ -23,8 +23,8 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config.loader import cfg
-from scripts.api_client import get_stock_candles
+from config.load_settings import cfg
+from scripts.api_marketdata import get_stock_candles
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 log_dir = Path(cfg["paths"]["logs"])

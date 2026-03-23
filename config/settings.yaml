@@ -1,5 +1,5 @@
 api:
-  token: "eUk4Sm4yV1k5ODZULUhfQTBZY2lhcFBSTk5kcWJUWFNLWENpd1BmRUdLUT0"       # paste your marketdata.app token
+  token: "NTBwV2VJOENkaGRyUDJkcTVyemkzdGVqTXFYZW9IMmJsMHBNaVdmLWxaZz0"       # paste your marketdata.app token
   base_url: "https://api.marketdata.app/v1"
   request_delay: 0.35                # seconds between requests (be polite)
   retry_attempts: 3                  # retries on rate-limit / server error
@@ -26,17 +26,17 @@ collection:
   phases:
     - id: 1
       name: "pre_tariff_baseline"
-      start: "2025-01-06"            # first trading day of 2025
-      end: "2025-03-17"              # two weeks before Liberation Day
-      frequency: "weekly"            # one snapshot per week
+      start: "2025-03-24"
+      end: "2025-04-01"
+      frequency: "daily"
       strike_limit: 20
 
     - id: 2
       name: "tariff_event_window"
-      start: "2025-03-18"
-      end: "2025-05-09"              # ~4 weeks after 90-day pause announced
-      frequency: "daily"             # every trading day
-      strike_limit: 30               # wider strike coverage to capture skew
+      start: "2025-04-02"
+      end: "2025-05-09"
+      frequency: "daily"
+      strike_limit: 30             # wider strike coverage to capture skew
 
     - id: 3
       name: "recovery"

@@ -12,7 +12,7 @@ from typing import Optional
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config.loader import cfg
+from config.load_settings import cfg
 
 logger = logging.getLogger(__name__)
 
