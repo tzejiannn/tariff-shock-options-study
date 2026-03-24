@@ -27,21 +27,17 @@ treated as structurally damaged versus temporarily disrupted?*
 
 | Phase | Period | Frequency | Strike limit | Purpose |
 |-------|--------|-----------|--------------|---------|
-| 1 — Baseline | Mar 24 -> Apr 1 2025 | Daily | 20 | Pre-shock microstructure regime |
-| 2 — Event window | Apr 2 -> May 9 2025 | Daily | 30 | Shock, escalation, and pause |
-| 3 — Recovery | May 12 2025 -> Jan 16 2026 | Weekly | 20 | Regime normalisation per sector |
-
-> **AAPL extended baseline:** AAPL is whitelisted on Market Data App with no historical
-> lookback restriction. AAPL data was collected from Jan 6 2025 as an extended baseline.
-> All cross-sector comparisons use Mar 24 2025 as the common start date to ensure fairness.
+| 1. Baseline | Mar 24 -> Apr 1 2025 | Daily | 20 | Pre-shock microstructure regime |
+| 2. Event Window | Apr 2 -> May 9 2025 | Daily | 30 | Shock, escalation, and pause |
+| 3. Recovery | May 12 2025 -> Jan 16 2026 | Weekly | 20 | Regime normalisation per sector |
 
 ### Key event dates
 
 | Date | Event |
 |------|-------|
-| Apr 2 2025 | Liberation Day — sweeping tariffs announced on ~60 countries |
-| Apr 9 2025 | Tariff escalation for 57 partners + 90-day pause announced same day |
-| May 12 2025 | US-China truce — 90-day tariff reduction agreement |
+| Apr 2 2025 | Liberation Day. Sweeping Tariffs announced on ~60 countries |
+| Apr 9 2025 | Tariff Escalation for 57 partners + 90-day pause announced same day |
+| May 12 2025 | US-China truce. 90-day Tariff Reduction Agreement |
 
 ---
 
@@ -51,21 +47,10 @@ Data is collected from [Market Data App](https://www.marketdata.app/).
 
 ### Plan limitations (Starter trial)
 
-- **Credits:** 10,000 per day, resetting at 9:30 AM ET
+- **Requests:** 10,000 per day, resetting at 9:30 AM ET
 - **Historical lookback:** 1 year from today for non-AAPL tickers
 - **Greeks and IV:** Not included on the Starter plan — iv, delta, gamma, theta,
   vega columns will be present but entirely null
-- **Credit cost:** Each option symbol returned consumes 1 credit. With
-  `strikeLimit=20`, each expiry fetch costs ~40 credits (20 calls + 20 puts)
-
-### How credits are spent
-
-```
-Phase 1: ~7 days  x 5 tickers x 4 expiries x ~30 credits =  ~4,200 credits
-Phase 2: 28 days  x 5 tickers x 4 expiries x ~50 credits = ~28,000 credits
-Phase 3: 34 weeks x 5 tickers x 4 expiries x ~30 credits = ~20,400 credits
-Total:  ~52,600 credits across ~6 API days
-```
 
 ---
 
@@ -122,7 +107,7 @@ Never commit your token to GitHub.
 Always run from the project root. The `--resume` flag skips files already
 collected so interrupted runs restart safely without re-spending credits.
 
-### Step 1 — Fetch daily prices (run once, 5 credits total)
+### Step 1 — Fetch daily prices
 
 ```powershell
 python scripts/scrape_prices.py
@@ -133,17 +118,16 @@ Used later to compute realised volatility and the variance risk premium.
 
 ### Step 2 — Collect option chains
 
-Run one phase per day to stay within the 10,000 credit daily limit.
 Re-run the same command each day — `--resume` picks up where it left off.
 
 ```powershell
-# Phase 1 -- ~4,200 credits, finishes in one run
+# Phase 1
 python scripts/scrape_options.py --phase 1 --resume
 
-# Phase 2 -- ~28,000 credits, spread across 3 days
+# Phase 2
 python scripts/scrape_options.py --phase 2 --resume
 
-# Phase 3 -- ~20,400 credits, spread across 3 days
+# Phase 3
 python scripts/scrape_options.py --phase 3 --resume
 ```
 
