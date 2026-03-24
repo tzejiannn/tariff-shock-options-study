@@ -13,13 +13,13 @@ treated as structurally damaged versus temporarily disrupted?*
 
 ## Tickers and sectors
 
-| Ticker | Sector | Tariff exposure |
-|--------|--------|-----------------|
-| AAPL | Technology | Indirect — supply chain dependency on China |
-| NVDA | Semiconductors | Direct — chip export restrictions |
-| AMZN | Consumer Discretionary | Supply chain + consumer spending sensitivity |
-| PG | Consumer Staples | Defensive FMCG, low beta, expected contrast case |
-| CAT | Industrials | Heavy machinery, large China revenue, direct exposure |
+|Name | Ticker | Sector | Tariff exposure |
+|-----|--------|--------|-----------------|
+| Apple | AAPL | Technology | Indirect, supply chain dependency on China |
+| Nvidia | NVDA | Semiconductors | Direct, chip export restrictions |
+| Amazon | AMZN | Consumer Discretionary | Defensive, Increased fulfillment cost, Decreased Consumer purchasing power |
+| Proctor and Gamble | PG | Consumer Staples | Defensive FMCG, low beta benchmark |
+| Caterpillar | CAT | Industrials | Direct, Heavy machinery, large China revenue |
 
 ---
 
