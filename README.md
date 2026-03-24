@@ -196,19 +196,26 @@ After collection, run each step in order from the project root:
 
 ```powershell
 # Step 1 -- Clean raw data, fix dtypes, flag illiquid rows
-python notebooks/step1_clean.py
+python notebooks/clean.py
 
-# Step 2 -- Feature engineering (spreads, moneyness, skew) -- coming
-python notebooks/step2_features.py
+# Step 2 -- Feature engineering (spreads, moneyness, phase, days from Liberation Day)
+python notebooks/features.py
 
-# Step 3 -- Realised volatility from price data -- coming
-python notebooks/step3_rv.py
+# Step 3 -- Realised volatility from price data, merge onto options features
+python notebooks/rv.py
 
-# Step 4 -- Combine into master datasets -- coming
-python notebooks/step4_combine.py
+# Step 4 -- Combine into master datasets
+python notebooks/combine.py
+```
 
-# EDA -- full analysis and visualisations -- coming
-jupyter notebook notebooks/EDA.ipynb
+Then open the analysis notebooks in Jupyter:
+
+```powershell
+# Exploratory data analysis -- 8 figures across all tickers and phases
+jupyter notebook notebooks/eda.ipynb
+
+# Statistical tests -- Mann-Whitney, Kruskal-Wallis, pairwise comparisons
+jupyter notebook notebooks/stats.ipynb
 ```
 
 ---
@@ -271,22 +278,28 @@ tariff-shock-options-study/
 |
 +-- config/
 |   +-- settings.yaml          # Single source of truth: tickers, phases, paths, token
-|   +-- loader.py              # Loads settings.yaml, imported by all scripts
+|   +-- load_settings.py       # Loads settings.yaml, imported by all scripts
 |   +-- __init__.py            # Empty -- marks config/ as a Python package
 |
 +-- scripts/
-|   +-- api_client.py          # Market Data App HTTP wrapper (auth, retries, 2xx/203)
+|   +-- api_marketdata.py      # Market Data App HTTP wrapper (auth, retries, 2xx/203)
 |   +-- trading_calendar.py    # US trading day generation with NYSE holidays baked in
 |   +-- scrape_options.py      # Option chain collection across all phases and tickers
 |   +-- scrape_prices.py       # Daily OHLCV price collection for all tickers
+|   +-- upload_to_mongo.py     # Uploads cleaned/combined data to MongoDB Atlas
 |   +-- __init__.py            # Empty -- marks scripts/ as a Python package
 |
++-- db/
+|   +-- mongo.py               # MongoDB connection helper and query utilities
+|   +-- __init__.py            # Empty -- marks db/ as a Python package
+|
 +-- notebooks/
-|   +-- step1_clean.py         # Step 1: clean raw CSVs, fix dtypes, flag illiquid rows
-|   +-- step2_features.py      # Step 2: engineer spread, moneyness, skew (coming)
-|   +-- step3_rv.py            # Step 3: realised volatility from price data (coming)
-|   +-- step4_combine.py       # Step 4: combine into master datasets (coming)
-|   +-- EDA.ipynb              # Exploratory data analysis and visualisations (coming)
+|   +-- clean.py              # Step 1: clean raw CSVs, fix dtypes, flag illiquid rows
+|   +-- features.py           # Step 2: engineer spread, moneyness, phase, days_from_apr2
+|   +-- rv.py                 # Step 3: realised volatility from prices, merge onto options
+|   +-- combine.py            # Step 4: combine all enriched files into master datasets
+|   +-- eda.ipynb             # Exploratory data analysis -- 8 figures
+|   +-- stats.ipynb           # Statistical tests -- Mann-Whitney, Kruskal-Wallis, pairwise
 |
 +-- data/
 |   +-- raw/
@@ -319,7 +332,13 @@ tariff-shock-options-study/
 |   |       +-- CAT_daily_prices.csv
 |   |
 |   +-- clean/                 # Cleaned CSVs mirroring raw/options/ structure
-|   +-- combined/              # Master datasets (all tickers, all phases merged)
+|   +-- features/             # Feature-enriched CSVs (spread, moneyness, phase, days_from_apr2)
+|   +-- enriched/             # Features + realised_vol merged in
+|   +-- rv/                   # Standalone RV time series per ticker ({TICKER}_rv.csv)
+|   +-- combined/             # Master datasets (combined_all.csv + per-ticker files)
+|
++-- outputs/
+|   +-- figures/               # Saved PNGs from eda.ipynb (fig1 through fig8)
 |
 +-- logs/
 |   +-- scrape_options.log     # Full audit trail of all collection runs
@@ -334,7 +353,7 @@ tariff-shock-options-study/
 
 ## Known data limitations
 
-**IV and Greeks dropped from pipeline**
+1. **IV and Greeks dropped from pipeline**
 The data plan used for this project does not return implied volatility or
 Greeks. The columns `iv`, `delta`, `gamma`, `theta`, and `vega` were
 present in the raw API response but entirely null. They are dropped in
@@ -342,52 +361,22 @@ present in the raw API response but entirely null. They are dropped in
 liquidity proxies instead: bid-ask spread, relative spread, volume, and
 open interest.
 
-**Non-AAPL tickers limited to 1 year of history**
+2. **Non-AAPL tickers limited to 1 year of history**
 NVDA, AMZN, PG, and CAT data starts from Mar 24 2025 due to the API
 1-year lookback restriction on trial accounts. AAPL data starts from
 Jan 6 2025. All cross-sector analysis uses Mar 24 2025 as the common
 start date.
 
-**Missing expiry on Sep 15 2025 for PG and CAT**
+3. **Missing expiry on Sep 15 2025 for PG and CAT**
 No December 2025 expiry data was available for PG and CAT on September 15
 2025. The API confirmed no chain existed for that expiry on that date.
 This is consistent with lower options market liquidity for these tickers
 compared to AAPL and NVDA. Impact on analysis is negligible given 35 other
 complete weekly snapshots for both tickers in Phase 3.
 
-**Illiquid contracts (bid = 0)**
+4. **Illiquid contracts (bid = 0)**
 Approximately 16% of rows have bid = 0, indicating contracts with no active
 market maker quote. These are flagged with `is_illiquid = True` in the
 cleaned data and retained for open interest analysis.
 
 ---
-
-## Troubleshooting
-
-**ModuleNotFoundError: No module named 'config'**
-Run `pip install -e .` from the project root, or permanently set PYTHONPATH:
-```powershell
-[System.Environment]::SetEnvironmentVariable("PYTHONPATH", "C:\path\to\project", "User")
-```
-Also ensure both `config/__init__.py` and `scripts/__init__.py` exist as
-empty files.
-
-**HTTP 402 for non-AAPL tickers on early dates**
-The 1-year lookback limit is blocking those dates. Dates before
-March 23 2025 are inaccessible for non-AAPL tickers on the trial plan.
-
-**HTTP 203 responses being treated as errors**
-The Starter plan returns HTTP 203 instead of 200 for paid data. The
-api_client accepts any 2xx status code. Ensure you are using the
-latest version of `scripts/api_client.py`.
-
-**UnicodeEncodeError in terminal output**
-Windows uses cp1252 encoding by default which cannot display Unicode
-characters such as arrows. All log messages in the scripts use ASCII
-only. Ensure you are using the latest versions of all script files.
-
-**Logs folder is empty**
-Log files are created on the first script run. If empty, either no
-scripts have run yet, or the log path in settings.yaml does not match
-your actual folder name. Check that `paths.logs` in settings.yaml
-is set to `"logs"`.
