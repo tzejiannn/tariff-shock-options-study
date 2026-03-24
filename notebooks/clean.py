@@ -6,12 +6,6 @@ What this script does:
     - Validates data integrity (bid <= ask, strike > 0, etc.)
     - Reports a data quality summary
     - Saves cleaned files to data/clean/
-
-Note on IV and Greeks:
-    The Market Data App Starter plan does not return implied volatility,
-    delta, gamma, theta, or vega. These columns will be present but entirely
-    null. They are kept as placeholders -- if you upgrade your plan and
-    re-collect, the cleaning pipeline handles them automatically.
 """
 
 import sys
@@ -189,10 +183,14 @@ def clean_file(raw_path: Path) -> pd.DataFrame:
     df["firstTraded"]     = parse_datetime_col(df["firstTraded"])
     df["updated"]         = parse_datetime_col(df["updated"])
 
+    # Drop IV and Greeks -- not available on the data plan used for this project
+    for col in ["iv", "delta", "gamma", "theta", "vega"]:
+        if col in df.columns:
+            df.drop(columns=col, inplace=True)
+
     # Float columns
     for col in ["strike", "bid", "mid", "ask", "last",
-                "intrinsicValue", "extrinsicValue", "underlyingPrice",
-                "iv", "delta", "gamma", "theta", "vega"]:
+                "intrinsicValue", "extrinsicValue", "underlyingPrice"]:
         if col in df.columns:
             df[col] = clean_float_col(df[col])
 
@@ -217,7 +215,7 @@ def clean_file(raw_path: Path) -> pd.DataFrame:
     return df
 
 
-# ── Step 3: Run cleaning across all files ─────────────────────────────────────
+# Run Cleaning for all Files
 
 print("\nCleaning files...")
 
@@ -248,14 +246,13 @@ for entry in all_files:
         "file":          raw_path.name,
         "rows":          len(df_clean),
         "illiquid_rows": int(df_clean["is_illiquid"].sum()),
-        "null_iv":       int(df_clean["iv"].isnull().sum()),
     })
 
 results_df = pd.DataFrame(results)
 print(f"Cleaned {len(results_df)} files")
 
 
-# ── Step 4: Validation report ─────────────────────────────────────────────────
+# Validation Report
 
 print(f"\nValidation warnings: {len(total_warnings)}")
 if total_warnings:
@@ -265,7 +262,7 @@ else:
     print("No warnings -- all files passed integrity checks.")
 
 
-# ── Step 5: Data quality summary ──────────────────────────────────────────────
+# Data Summary
 
 print("\n=== Rows per ticker ===")
 print(results_df.groupby("ticker")["rows"].sum().to_string())
@@ -282,18 +279,6 @@ illiquid["illiquid_pct"] = (
     illiquid["illiquid_rows"] / illiquid["total_rows"] * 100
 ).round(1)
 print(illiquid.to_string())
-
-print("\n=== IV null rate per ticker ===")
-iv_summary = results_df.groupby("ticker").agg(
-    total_rows =("rows",     "sum"),
-    null_iv    =("null_iv",  "sum"),
-)
-iv_summary["null_iv_pct"] = (
-    iv_summary["null_iv"] / iv_summary["total_rows"] * 100
-).round(1)
-print(iv_summary.to_string())
-print("\nNote: IV is null for all rows on the Starter plan.")
-print("Greeks (delta, gamma, theta, vega) are also null for the same reason.")
 
 print("\n=== File count per ticker per phase ===")
 file_counts = results_df.groupby(["ticker", "phase"]).size().unstack(fill_value=0)
@@ -322,4 +307,3 @@ if not pg_files.empty:
     ]].head(8).to_string())
 
 print("\nStep 1 complete. Cleaned files saved to data/clean/")
-print("Next: run step2_features.py")
