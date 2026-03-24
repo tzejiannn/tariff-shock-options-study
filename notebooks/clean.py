@@ -1,11 +1,11 @@
 """
 What this script does:
-    - Parses all columns into correct data types
-    - Strips timezone info from datetime columns
-    - Flags illiquid rows (bid=0) without dropping them
-    - Validates data integrity (bid <= ask, strike > 0, etc.)
-    - Reports a data quality summary
-    - Saves cleaned files to data/clean/
+- Parses all columns into correct data types
+- Strips timezone info from datetime columns
+- Flags illiquid rows (bid=0) without dropping them
+- Validates data integrity (bid <= ask, strike > 0, etc.)
+- Reports a data quality summary
+- Saves cleaned files to data/clean/
 """
 
 import sys
@@ -14,7 +14,7 @@ import numpy as np
 from pathlib import Path
 
 
-PROJECT_ROOT = Path(__file__).parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 RAW_DIR      = PROJECT_ROOT / "data" / "raw" / "options"
 CLEAN_DIR    = PROJECT_ROOT / "data" / "clean"
 CLEAN_DIR.mkdir(parents=True, exist_ok=True)
@@ -215,11 +215,11 @@ def clean_file(raw_path: Path) -> pd.DataFrame:
     return df
 
 
-# Run Cleaning for all Files
+# ── Step 3: Run cleaning for all files ────────────────────────────────────────
 
 print("\nCleaning files...")
 
-results       = []
+results        = []
 total_warnings = []
 
 for entry in all_files:
@@ -251,9 +251,7 @@ for entry in all_files:
 results_df = pd.DataFrame(results)
 print(f"Cleaned {len(results_df)} files")
 
-
-# Validation Report
-
+# Validation report
 print(f"\nValidation warnings: {len(total_warnings)}")
 if total_warnings:
     for w in total_warnings:
@@ -261,9 +259,7 @@ if total_warnings:
 else:
     print("No warnings -- all files passed integrity checks.")
 
-
-# Data Summary
-
+# Data summary
 print("\n=== Rows per ticker ===")
 print(results_df.groupby("ticker")["rows"].sum().to_string())
 
@@ -285,7 +281,7 @@ file_counts = results_df.groupby(["ticker", "phase"]).size().unstack(fill_value=
 print(file_counts.to_string())
 
 
-# ── Step 6: Spot check ────────────────────────────────────────────────────────
+# ── Spot check (optional) ─────────────────────────────────────────────────────
 
 print("\n=== Spot check -- first PG phase3 cleaned file ===")
 pg_files = results_df[
@@ -306,4 +302,4 @@ if not pg_files.empty:
         "openInterest", "inTheMoney", "is_illiquid"
     ]].head(8).to_string())
 
-print("\nStep 1 complete. Cleaned files saved to data/clean/")
+print("\nData cleaning complete. Cleaned files saved to data/clean/")

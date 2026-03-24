@@ -1,5 +1,5 @@
 api:
-  token: "NTBwV2VJOENkaGRyUDJkcTVyemkzdGVqTXFYZW9IMmJsMHBNaVdmLWxaZz0"       # paste your marketdata.app token
+  token: "INSERT API TOKE HERE"       # paste your marketdata.app token
   base_url: "https://api.marketdata.app/v1"
   request_delay: 0.35                # seconds between requests (be polite)
   retry_attempts: 3                  # retries on rate-limit / server error
