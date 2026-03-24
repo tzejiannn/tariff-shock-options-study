@@ -345,7 +345,6 @@ tariff-shock-options-study/
 |   +-- scrape_prices.log      # Audit trail for price collection
 |
 +-- requirements.txt
-+-- setup.py
 +-- README.md
 ```
 
